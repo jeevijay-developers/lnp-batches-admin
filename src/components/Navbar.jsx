@@ -38,7 +38,7 @@ const Navbar = () => {
               }}
               className="rounded-md font-semibold hover:cursor-pointer hover:text-blue-800 text-blue-500 transition"
             >
-              All Time Coupons
+              Coupons
             </button>
             <button className="px-4 py-2 rounded-md font-semibold text-white bg-red-500 hover:bg-red-600 transition">
               Logout
