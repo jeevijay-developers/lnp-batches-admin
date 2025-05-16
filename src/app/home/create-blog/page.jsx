@@ -1,4 +1,4 @@
-import CreateBlog from "../../../components/CreateBlog";
+import CreateBlog from "@/components/CreateBlog";
 import React from "react";
 
 const page = () => {

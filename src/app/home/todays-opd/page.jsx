@@ -1,21 +1,33 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { getAllTodaysOPDCamps } from "../../../server/common";
+import { getAllTodaysOPDCamps } from "@/server/common";
 import { ClipLoader } from "react-spinners";
+import Pagination from "@/components/Pagination";
 
 const columns = [
   { key: "image", label: "" },
+  { key: "index", label: "Sr No." },
   { key: "title", label: "Title" },
   { key: "location", label: "Location" },
   { key: "date", label: "Date" },
   { key: "time", label: "Time" }
 ];
 
-const formatDate = (dateStr) => new Date(dateStr).toLocaleString();
+const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString();
 
 const TodaysQueryPage = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5); // You can adjust this number
+
+  // Calculate pagination variables
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   useEffect(() => {
     setLoading(true);
@@ -27,6 +39,15 @@ const TodaysQueryPage = () => {
         console.error(err);
       }).finally(() => setLoading(false));
   }, []);
+
+  const formatTime = (time) => {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${displayHour}:${minutes} ${period}`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-700 p-6">
@@ -63,7 +84,7 @@ const TodaysQueryPage = () => {
                     </div>
                   </td>
                 </tr>
-              ) : data && data.length === 0 ? (
+              ) : currentItems.length === 0 ? (
                 <tr>
                   <td
                     colSpan={columns.length}
@@ -73,7 +94,7 @@ const TodaysQueryPage = () => {
                   </td>
                 </tr>
               ) : (
-                data && data.map((row) => (
+                currentItems.map((row) => (
                   <tr
                     key={row._id}
                     className="hover:bg-gray-100 dark:hover:bg-gray-700 transition"
@@ -82,13 +103,19 @@ const TodaysQueryPage = () => {
                       <td
                         key={col.key}
                         className="px-4 py-2 border-b text-center border-gray-200 dark:border-gray-700"
-                      >                        {col.key === "image" ? (
+                      >
+                        {col.key === "index" ? (
+                          indexOfFirstItem + currentItems.indexOf(row) + 1
+                        )                        
+                        :col.key === "image" ? (
                           <img 
                             src={row[col.key]} 
                             alt="OPD Image"
                             className="w-12 h-12 object-cover rounded-md mx-auto"
                           />
-                        ) : col.key === "createdAt" ? (
+                        ) : col.key === "time" ? (
+                          formatTime(row[col.key])
+                        ) : col.key === "date" ? (
                           formatDate(row[col.key])
                         ) : (
                           row[col.key]
@@ -101,6 +128,12 @@ const TodaysQueryPage = () => {
             </tbody>
           </table>
         </div>
+        <Pagination
+          usersPerPage={itemsPerPage}
+          totalUsers={data.length}
+          paginate={paginate}
+          currentPage={currentPage}
+        />
       </div>
     </div>
   );

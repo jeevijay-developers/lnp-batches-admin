@@ -1,42 +1,56 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { getAllNextOPDs } from "../../../server/common";
+import { getAllNextOPDs } from "@/server/common";
 import { ClipLoader } from "react-spinners";
+import Pagination from "@/components/Pagination";
 
 const columns = [
   { key: "image", label: "" },
+  {key: "index", label: "Sr No."},
   { key: "title", label: "Title" },
   { key: "location", label: "Location" },
   { key: "date", label: "Date" },
   { key: "time", label: "Time" }
 ];
 
-const formatDate = (dateStr) => new Date(dateStr).toLocaleString();
+const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString();
+
+// console.log("Date: ", formatDate("2023-10-01T12:00:00Z"));
+const formatTime = (time) => {
+  if (!time) return '';
+  const [hours, minutes] = time.split(':');
+  const hour = parseInt(hours, 10);
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${displayHour}:${minutes} ${period}`;
+};
 
 const UpcomingOPDsPage = () => {
   const [data, setData] = useState([]);
-  const [pageNo, setPageNo] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-
-  const limit = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(8);
 
   useEffect(() => {
     setLoading(true);
     getAllNextOPDs()
       .then((res) => {
+        setData(res || []);
         console.log("Upcoming OPDs data: ", res);
         
-        setData(res);
-        // setTotalPages(res.total ? Math.ceil(res.total / limit) : 1);
       })
       .catch((err) => {
         setData([]);
-        setTotalPages(1);
         console.error(err);
       })
       .finally(() => setLoading(false));
-  }, [pageNo]);
+  }, []);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-700 p-6">
@@ -73,7 +87,7 @@ const UpcomingOPDsPage = () => {
                     </div>
                   </td>
                 </tr>
-              ) : data && data.length <= 0 ? (
+              ) : currentItems.length === 0 ? (
                 <tr>
                   <td
                     colSpan={columns.length}
@@ -83,7 +97,7 @@ const UpcomingOPDsPage = () => {
                   </td>
                 </tr>
               ) : (
-                data && data.map((row) => (
+                currentItems.map((row, index) => (
                   <tr
                     key={row._id}
                     className="hover:bg-gray-100 dark:hover:bg-gray-700 transition"
@@ -92,13 +106,17 @@ const UpcomingOPDsPage = () => {
                       <td
                         key={col.key}
                         className="px-4 py-2 border-b text-center border-gray-200 dark:border-gray-700"
-                      >                        {col.key === "image" ? (
-                          <img 
+                      >  {col.key === "index" ? (
+                        indexOfFirstItem + index + 1
+                      ) : col.key === "image" ? (
+                        <img 
                             src={row[col.key]} 
                             alt="OPD Image"
                             className="w-12 h-12 object-cover rounded-md mx-auto"
                           />
-                        ) : col.key === "createdAt" ? (
+                        ) : col.key === "time" ? (
+                          formatTime(row[col.key])
+                        ) : col.key === "date" ? (
                           formatDate(row[col.key])
                         ) : (
                           row[col.key]
@@ -111,26 +129,12 @@ const UpcomingOPDsPage = () => {
             </tbody>
           </table>
         </div>
-        {/* Pagination Controls */}
-        <div className="flex justify-center items-center mt-6 space-x-2">
-          <button
-            className="px-3 py-1 rounded bg-blue-600 text-white font-semibold disabled:opacity-50"
-            onClick={() => setPageNo((p) => Math.max(1, p - 1))}
-            disabled={pageNo === 1}
-          >
-            Previous
-          </button>
-          <span className="text-gray-700 dark:text-gray-200 font-semibold">
-            Page {pageNo} of {totalPages}
-          </span>
-          <button
-            className="px-3 py-1 rounded bg-blue-600 text-white font-semibold disabled:opacity-50"
-            onClick={() => setPageNo((p) => Math.min(totalPages, p + 1))}
-            disabled={pageNo === totalPages}
-          >
-            Next
-          </button>
-        </div>
+        <Pagination
+          usersPerPage={itemsPerPage}
+          totalUsers={data.length}
+          paginate={paginate}
+          currentPage={currentPage}
+        />
       </div>
     </div>
   );
