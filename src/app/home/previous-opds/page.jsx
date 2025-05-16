@@ -1,33 +1,34 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { getAllTimeQuery } from "../../../server/common";
+import { getAllPreviousOPDCamps } from "../../../server/common";
+import { ClipLoader } from "react-spinners";
 
 const columns = [
-  { key: "name", label: "Name" },
-  { key: "mobile", label: "Mobile" },
-  { key: "course", label: "Course" },
-  { key: "query", label: "Query" },
-  { key: "coupon", label: "Coupon" },
-  { key: "totalAmount", label: "Total Amount" },
-  { key: "createdAt", label: "Created At" },
+  { key: "image", label: "" },
+  { key: "title", label: "Title" },
+  { key: "location", label: "Location" },
+  { key: "date", label: "Date" },
+  { key: "time", label: "Time" }
 ];
 
 const formatDate = (dateStr) => new Date(dateStr).toLocaleString();
 
-const AllTimeQueryPage = () => {
+const PreviousOPDsPage = () => {
   const [data, setData] = useState([]);
   const [pageNo, setPageNo] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const limit = 10;
 
   useEffect(() => {
     setLoading(true);
-    getAllTimeQuery(pageNo, limit)
+    getAllPreviousOPDCamps()
       .then((res) => {
-        setData(res.data || []);
-        setTotalPages(res.total ? Math.ceil(res.total / limit) : 1);
+        console.log("Previous OPDs data: ", res);
+        
+        setData(res);
+        // setTotalPages(res.total ? Math.ceil(res.total / limit) : 1);
       })
       .catch((err) => {
         setData([]);
@@ -41,7 +42,7 @@ const AllTimeQueryPage = () => {
     <div className="min-h-screen bg-gray-100 dark:bg-gray-700 p-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-blue-700 dark:text-blue-400 mb-8">
-          All Time's Queries
+          Previous OPDs
         </h1>
         <div className="overflow-x-auto rounded-lg shadow-lg">
           <table className="min-w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
@@ -50,7 +51,7 @@ const AllTimeQueryPage = () => {
                 {columns.map((col) => (
                   <th
                     key={col.key}
-                    className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-blue-200 dark:bg-gray-900 text-left text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300"
+                    className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-blue-200 dark:bg-gray-900 text-center text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300"
                   >
                     {col.label}
                   </th>
@@ -60,14 +61,19 @@ const AllTimeQueryPage = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td
-                    colSpan={columns.length}
-                    className="px-6 py-4 text-center text-gray-400"
-                  >
-                    Loading...
+                  <td colSpan={columns.length} className="px-6 py-4">
+                    <div className="flex justify-center items-center w-full">
+                      <ClipLoader
+                        color={"#3b82f6"}
+                        loading={loading}
+                        size={30}
+                        aria-label="Loading Spinner"
+                        data-testid="loader"
+                      /> 
+                    </div>
                   </td>
                 </tr>
-              ) : data.length === 0 ? (
+              ) : data && data.length <= 0 ? (
                 <tr>
                   <td
                     colSpan={columns.length}
@@ -77,7 +83,7 @@ const AllTimeQueryPage = () => {
                   </td>
                 </tr>
               ) : (
-                data.map((row) => (
+                data && data.map((row) => (
                   <tr
                     key={row._id}
                     className="hover:bg-gray-100 dark:hover:bg-gray-700 transition"
@@ -85,11 +91,18 @@ const AllTimeQueryPage = () => {
                     {columns.map((col) => (
                       <td
                         key={col.key}
-                        className="px-6 py-4 border-b border-gray-200 dark:border-gray-700"
-                      >
-                        {col.key === "createdAt"
-                          ? formatDate(row[col.key])
-                          : row[col.key]}
+                        className="px-4 py-2 border-b text-center border-gray-200 dark:border-gray-700"
+                      >                        {col.key === "image" ? (
+                          <img 
+                            src={row[col.key]} 
+                            alt="OPD Image"
+                            className="w-12 h-12 object-cover rounded-md mx-auto"
+                          />
+                        ) : col.key === "createdAt" ? (
+                          formatDate(row[col.key])
+                        ) : (
+                          row[col.key]
+                        )}
                       </td>
                     ))}
                   </tr>
@@ -123,4 +136,4 @@ const AllTimeQueryPage = () => {
   );
 };
 
-export default AllTimeQueryPage;
+export default PreviousOPDsPage;

@@ -2,19 +2,31 @@ import apiClient from "./axios";
 
 // const query = process.env.NEXT_PUBLIC_API_URL_LOCAL;
 
-export const getTodaysQuery = async () => {
+export const getAllTodaysOPDCamps = async () => {
   try {
-    const res = await apiClient.get(`/api/checkout/today`);
+    const res = await apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/opds/todays-opdcamps`);
+    console.log("Todays data", res.data);
+    
     return res.data;
   } catch (err) {
     throw err;
   }
 };
 
-export const getAllTimeQuery = async (pageNo, limit) => {
+export const getAllNextOPDs = async () => {
   try {
     const res = await apiClient.get(
-      `/api/checkout/all?page=${pageNo}&limit=${limit}`
+      `${process.env.NEXT_PUBLIC_BASE_URL}/opds/opdcamps/next`
+    );
+    return res.data;
+  } catch (err) {
+    throw err;
+  }
+};
+export const getAllPreviousOPDCamps = async () => {
+  try {
+    const res = await apiClient.get(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/opds/opdcamps/previous-all`
     );
     return res.data;
   } catch (err) {
