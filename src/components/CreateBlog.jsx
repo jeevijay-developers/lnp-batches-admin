@@ -1,9 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-// import axios from "axios";
 import 'react-quill-new/dist/quill.snow.css';
-// import "bootstrap/dist/css/bootstrap.min.css";
+import { axiosInstance } from "../../lib/axiosInstance";
+import { toast } from "react-toast";
+import { ClipLoader } from "react-spinners";
+
 
 const ReactQuill = dynamic(() => import("react-quill-new"), {
   ssr: false,
@@ -16,16 +18,33 @@ export default function CreateBlog() {
   const [content, setContent] = useState("");
   const [bannerImage, setBannerImage] = useState(null);
   const [contentImages, setContentImages] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     const formData = new FormData();
     formData.append("title", title);
     formData.append("desc", desc);
     formData.append("content", content);
     if (bannerImage) formData.append("bannerImage", bannerImage);
-    contentImages.forEach((img) => formData.append("contentImages", img));
-
+    contentImages.forEach((img) => formData.append("contentImages", img));    
+    
+    axiosInstance.post("/blogs/add-blog", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+    .then((response) => {
+      console.log("Blog submitted successfully:", response.data);
+      toast.success("Blog submitted successfully!");
+    })
+    .catch((error) => {
+      console.error("Error submitting blog:", error);
+      toast.error("Error submitting blog. Please try again.");
+    })
+    .finally(() => setLoading(false));
+    
     // await axios.post("http://localhost:5000/api/blogs", formData);
     // alert("Blog submitted!");
   };
@@ -138,11 +157,19 @@ export default function CreateBlog() {
 
         <button
           type="submit"
-          className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
-        >
-          Publish Blog
-        </button>
-      </form>
+        className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform transition-transform duration-200"
+      >
+        {loading ?
+          <ClipLoader
+            color={"#fff"}
+            loading={loading}
+            size={30}
+            aria-label="Loading Spinner"
+            data-testid="loader"
+          /> : 
+          "Publish Blog"}
+      </button>
+    </form>
     </div>
   );
 }
