@@ -65,8 +65,7 @@ const Navbar = () => {
               }}
               className="px-2 py-2 rounded-lg font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-all duration-200 shadow-md hover:shadow-lg flex items-center space-x-2 transform hover:scale-105"
             >
-
-              <span className="flex items-center gap-2"> <FaClock /> Previous OPDs</span>
+              All Time Coupons
             </button>
 
             <button
